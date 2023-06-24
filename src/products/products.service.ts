@@ -3,12 +3,14 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from "@nestjs/common";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Product } from "./entities/product.entity";
+import { isUUID } from "class-validator";
 
 @Injectable()
 export class ProductsService {
@@ -26,21 +28,27 @@ export class ProductsService {
     }
   };
 
-  findAll() {
-    return `This action returns all products`;
-  }
+  public findAll = async () => {
+    return this.repository.find();
+  };
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
-  }
+  public findOne = async (term: string) => {
+    let product: Product;
+    if (isUUID(term)) product = await this.repository.findOneBy({ id: term });
+    else product = await this.repository.findOneBy({ slug: term });
+    if (!product) throw new NotFoundException("Product not found");
+    return product;
+  };
 
-  update(id: number, updateProductDto: UpdateProductDto) {
+  public update = async (id: string, updateProductDto: UpdateProductDto) => {
     return `This action updates a #${id} product`;
-  }
+  };
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
-  }
+  public remove = async (id: string) => {
+    const result = await this.repository.delete(id);
+    if (result.affected === 0) throw new NotFoundException("Product not found");
+    return { message: `Product was removed` };
+  };
 
   private handleException = (error: any) => {
     if (error.code === "23505") {
