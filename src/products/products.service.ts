@@ -11,6 +11,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Product } from "./entities/product.entity";
 import { isUUID } from "class-validator";
+import PaginationDto from "../common/dto/pagination.dto";
 
 @Injectable()
 export class ProductsService {
@@ -28,8 +29,12 @@ export class ProductsService {
     }
   };
 
-  public findAll = async () => {
-    return this.repository.find();
+  public findAll = async (pagination: PaginationDto) => {
+    const { limit = 10, offset = 0 } = pagination;
+    return this.repository.find({
+      take: limit,
+      skip: offset,
+    });
   };
 
   public findOne = async (term: string) => {

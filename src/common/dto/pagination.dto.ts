@@ -1,13 +1,14 @@
-import { IsInt, IsOptional, IsPositive } from "class-validator";
+import { IsOptional, IsPositive, Min } from "class-validator";
+import { Type } from "class-transformer";
 
 export default class PaginationDto {
   @IsOptional()
-  @IsInt()
   @IsPositive()
+  @Type(() => Number)
   limit?: number;
 
   @IsOptional()
-  @IsInt()
-  @IsPositive()
+  @Type(() => Number)
+  @Min(0)
   offset?: number;
 }
