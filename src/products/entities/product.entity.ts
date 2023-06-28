@@ -7,7 +7,7 @@ import {
 } from "typeorm";
 
 @Entity()
-export class Product {
+export default class Product {
   @PrimaryGeneratedColumn("uuid")
   readonly id: string;
 
