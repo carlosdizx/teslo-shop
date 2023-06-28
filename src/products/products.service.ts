@@ -8,22 +8,32 @@ import {
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Product } from "./entities/product.entity";
+import { DataSource, Repository } from "typeorm";
+import Product from "./entities/product.entity";
 import { isUUID } from "class-validator";
 import PaginationDto from "../common/dto/pagination.dto";
+import ProductImage from "./entities/product-image.entity";
 
 @Injectable()
 export class ProductsService {
   private readonly logger = new Logger("ProductsService");
   constructor(
-    @InjectRepository(Product) private readonly repository: Repository<Product>
+    @InjectRepository(Product) private readonly repository: Repository<Product>,
+    @InjectRepository(ProductImage)
+    private readonly repositoryProductImage: Repository<ProductImage>,
+    private readonly datasource: DataSource
   ) {}
   public create = async (createProductDto: CreateProductDto) => {
+    const { images = [], ...productDetails } = createProductDto;
     try {
-      const product = await this.repository.create(createProductDto);
+      const product = await this.repository.create({
+        ...productDetails,
+        images: images.map((image) =>
+          this.repositoryProductImage.create({ url: image })
+        ),
+      });
       await this.repository.save(product);
-      return product;
+      return { ...product, images: product.images.map((image) => image.url) };
     } catch (error) {
       this.handleException(error);
     }
@@ -31,18 +41,26 @@ export class ProductsService {
 
   public findAll = async (pagination: PaginationDto) => {
     const { limit = 10, offset = 0 } = pagination;
-    return this.repository.find({
+    const products = await this.repository.find({
       take: limit,
       skip: offset,
+      relations: {
+        images: true,
+      },
     });
+    return products.map(({ images, ...rest }) => ({
+      ...rest,
+      images: images.map((image) => image.url),
+    }));
   };
 
   public findOne = async (term: string) => {
     let product: Product;
     if (isUUID(term)) product = await this.repository.findOneBy({ id: term });
     else {
-      const queryBuilder = this.repository.createQueryBuilder();
+      const queryBuilder = this.repository.createQueryBuilder("product");
       product = await queryBuilder
+        .leftJoinAndSelect("product.images", "productImages")
         .where("LOWER(title) = LOWER(:title) or slug =:slug", {
           title: term,
           slug: term,
@@ -50,19 +68,39 @@ export class ProductsService {
         .getOne();
     }
     if (!product) throw new NotFoundException("Product not found");
-    return product;
+    return { ...product, images: product.images.map((image) => image.url) };
   };
 
   public update = async (id: string, updateProductDto: UpdateProductDto) => {
-    const product = await this.repository.preload({
-      id,
-      ...updateProductDto,
-    });
+    const { images, ...toUpdate } = updateProductDto;
+
+    const product = await this.repository.preload({ id, ...toUpdate });
     if (!product) throw new NotFoundException("Product not found");
+    const queryRunner = this.datasource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
-      await this.repository.save(product);
-      return product;
+      if (images) {
+        await queryRunner.manager.delete(ProductImage, {
+          product: { id },
+        });
+
+        product.images = images.map((image) =>
+          this.repositoryProductImage.create({ url: image })
+        );
+      } else
+        product.images = await this.repositoryProductImage.findBy({
+          product: { id },
+        });
+
+      await queryRunner.manager.save(product);
+
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+      return { ...product, images: product.images.map((image) => image.url) };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
       this.handleException(error);
     }
   };

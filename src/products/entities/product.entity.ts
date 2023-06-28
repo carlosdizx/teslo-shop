@@ -3,11 +3,13 @@ import {
   BeforeUpdate,
   Column,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import ProductImage from "./product-image.entity";
 
 @Entity()
-export class Product {
+export default class Product {
   @PrimaryGeneratedColumn("uuid")
   readonly id: string;
 
@@ -34,6 +36,12 @@ export class Product {
 
   @Column("text", { array: true, default: [] })
   tags: string[];
+
+  @OneToMany(() => ProductImage, (productImage) => productImage.product, {
+    cascade: true,
+    eager: true,
+  })
+  images?: ProductImage[];
 
   @BeforeInsert()
   checkSlugForInsert = () => {
