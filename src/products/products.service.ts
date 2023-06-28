@@ -43,7 +43,7 @@ export class ProductsService {
     else {
       const queryBuilder = this.repository.createQueryBuilder();
       product = await queryBuilder
-        .where('title =:title or slug =:slug', {
+        .where('LOWER(title) = LOWER(:title) or slug =:slug', {
           title: term,
           slug: term,
         })
