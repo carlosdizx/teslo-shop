@@ -32,7 +32,7 @@ export class ProductsService {
         ),
       });
       await this.repository.save(product);
-      return { ...product, images: product.images.map(image => image.url) };
+      return { ...product, images: product.images.map((image) => image.url) };
     } catch (error) {
       this.handleException(error);
     }
@@ -40,18 +40,26 @@ export class ProductsService {
 
   public findAll = async (pagination: PaginationDto) => {
     const { limit = 10, offset = 0 } = pagination;
-    return this.repository.find({
+    const products = await this.repository.find({
       take: limit,
       skip: offset,
+      relations: {
+        images: true,
+      },
     });
+    return products.map(({ images, ...rest }) => ({
+      ...rest,
+      images: images.map((image) => image.url),
+    }));
   };
 
   public findOne = async (term: string) => {
     let product: Product;
     if (isUUID(term)) product = await this.repository.findOneBy({ id: term });
     else {
-      const queryBuilder = this.repository.createQueryBuilder();
+      const queryBuilder = this.repository.createQueryBuilder("product");
       product = await queryBuilder
+        .leftJoinAndSelect("product.images", "productImages")
         .where("LOWER(title) = LOWER(:title) or slug =:slug", {
           title: term,
           slug: term,
@@ -59,7 +67,7 @@ export class ProductsService {
         .getOne();
     }
     if (!product) throw new NotFoundException("Product not found");
-    return product;
+    return { ...product, images: product.images.map((image) => image.url) };
   };
 
   public update = async (id: string, updateProductDto: UpdateProductDto) => {
