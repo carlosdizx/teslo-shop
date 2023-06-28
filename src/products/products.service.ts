@@ -59,7 +59,12 @@ export class ProductsService {
       ...updateProductDto,
     });
     if (!product) throw new NotFoundException("Product not found");
-    return this.repository.save(product);
+    try {
+      await this.repository.save(product);
+      return product;
+    } catch (error) {
+      this.handleException(error);
+    }
   };
 
   public remove = async (id: string) => {
