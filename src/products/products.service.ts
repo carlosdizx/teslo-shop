@@ -43,7 +43,7 @@ export class ProductsService {
     else {
       const queryBuilder = this.repository.createQueryBuilder();
       product = await queryBuilder
-        .where('LOWER(title) = LOWER(:title) or slug =:slug', {
+        .where("LOWER(title) = LOWER(:title) or slug =:slug", {
           title: term,
           slug: term,
         })
@@ -54,7 +54,12 @@ export class ProductsService {
   };
 
   public update = async (id: string, updateProductDto: UpdateProductDto) => {
-    return `This action updates a #${id} product`;
+    const product = await this.repository.preload({
+      id,
+      ...updateProductDto,
+    });
+    if (!product) throw new NotFoundException("Product not found");
+    return this.repository.save(product);
   };
 
   public remove = async (id: string) => {
