@@ -20,7 +20,7 @@ export class FilesController {
     })
   )
   public uploadProductImage(@UploadedFile() file: Express.Multer.File) {
-    if (!file) throw new BadRequestException("File is empty");
-    return file;
+    if (!file) throw new BadRequestException("Make sure you file is image");
+    return this.filesService.uploadImage(file);
   }
 }
