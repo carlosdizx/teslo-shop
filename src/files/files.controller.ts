@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   Controller,
+  Get,
+  Param,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -22,5 +24,10 @@ export class FilesController {
   public uploadProductImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException("Make sure you file is image");
     return this.filesService.uploadImage(file);
+  }
+
+  @Get("product/:imageName")
+  public findProductImage(@Param("imageName") imageName: string) {
+    return this.filesService.getImage(imageName);
   }
 }
