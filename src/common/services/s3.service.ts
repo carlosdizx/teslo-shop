@@ -12,7 +12,6 @@ export class S3Service {
   private readonly s3Client: S3Client;
 
   constructor() {
-    console.log("Cargado S3 service");
     this.s3Client = new S3Client({ region });
   }
 
