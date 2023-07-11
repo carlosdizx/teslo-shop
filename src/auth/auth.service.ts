@@ -37,12 +37,13 @@ export class AuthService {
   public loginUser = async ({ email, password }: LoginUserDto) => {
     const user = await this.repository.findOne({
       where: { email },
-      select: { email: true },
+      select: { email: true, password: true },
     });
     if (!user)
       throw new UnauthorizedException("Credentials are not valid (email)");
     if (!(await this.encryptUtil.validatePassword(password, user.password)))
       throw new UnauthorizedException("Credentials are not valid (password)");
+    delete user.password;
     return { ...user, token: this.generateJWT({ email: user.email }) };
   };
 

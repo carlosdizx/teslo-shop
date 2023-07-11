@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity("users")
 export default class User {
@@ -22,4 +22,14 @@ export default class User {
     default: ["user"],
   })
   roles: string[];
+
+  @BeforeInsert()
+  public insertEmailToLower = () => {
+    this.email = this.email.toLowerCase().trim();
+  };
+
+  @BeforeUpdate()
+  public updateEmailToLower = () => {
+    this.email = this.email.toLowerCase().trim();
+  };
 }
