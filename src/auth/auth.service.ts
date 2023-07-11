@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import CreateUserDto from "./dto/create-user.dto";
 import { Repository } from "typeorm";
 import User from "./entities/user.entity";
@@ -33,11 +33,14 @@ export class AuthService {
   };
 
   public loginUser = async ({ email, password }: LoginUserDto) => {
-    try {
-      const userFound = await this.repository.findOneBy({ email });
-      return userFound;
-    } catch (error) {
-      this.errorHandler.handleException(error, "AuthService - registerUser");
-    }
+    const userFound = await this.repository.findOne({
+      where: { email },
+      select: { email: true, password: true },
+    });
+    if (!userFound)
+      throw new UnauthorizedException("Credentials are not valid (email)");
+    if (!await this.encryptUtil.validatePassword(password, userFound.password))
+      throw new UnauthorizedException("Credentials are not valid (password)");
+    return userFound;
   };
 }
