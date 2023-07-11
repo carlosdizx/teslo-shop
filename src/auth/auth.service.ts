@@ -28,7 +28,7 @@ export class AuthService {
       });
       await this.repository.save(user);
       delete user.password;
-      return { ...user, token: this.generateJWT({ email: user.email }) };
+      return { ...user, token: this.generateJWT({ id: user.id }) };
     } catch (error) {
       this.errorHandler.handleException(error, "AuthService - registerUser");
     }
@@ -37,14 +37,14 @@ export class AuthService {
   public loginUser = async ({ email, password }: LoginUserDto) => {
     const user = await this.repository.findOne({
       where: { email },
-      select: { email: true, password: true },
+      select: { email: true, password: true, id: true },
     });
     if (!user)
       throw new UnauthorizedException("Credentials are not valid (email)");
     if (!(await this.encryptUtil.validatePassword(password, user.password)))
       throw new UnauthorizedException("Credentials are not valid (password)");
     delete user.password;
-    return { ...user, token: this.generateJWT({ email: user.email }) };
+    return { ...user, token: this.generateJWT({ id: user.id }) };
   };
 
   private generateJWT = (payload: JwtPayload) => {

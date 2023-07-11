@@ -3,7 +3,7 @@ import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } fr
 @Entity("users")
 export default class User {
   @PrimaryGeneratedColumn("uuid")
-  private readonly id: string;
+  readonly id: string;
 
   @Column("varchar", { unique: true })
   email: string;
