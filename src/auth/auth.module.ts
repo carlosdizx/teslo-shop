@@ -8,6 +8,7 @@ import EncryptUtil from "../common/utils/encrypt-handler";
 import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
 import * as process from "process";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 
 @Module({
   imports: [
@@ -17,8 +18,10 @@ import * as process from "process";
     }),
 
     JwtModule.registerAsync({
-      useFactory: () => ({
-        secret: process.env.JWT_SECRET,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>("JWT_SECRET"),
         signOptions: {
           expiresIn: "1d",
         },
