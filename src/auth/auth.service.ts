@@ -1,10 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { CreateUserDto } from "./dto/create-user.dto";
+import CreateUserDto from "./dto/create-user.dto";
 import { Repository } from "typeorm";
 import User from "./entities/user.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import ErrorHandler from "../common/utils/error-handler";
 import EncryptUtil from "../common/utils/encrypt-handler";
+import LoginUserDto from "./dto/login-user.dto";
 
 @Injectable()
 export class AuthService {
@@ -22,8 +23,19 @@ export class AuthService {
         ),
         fullName: createUserDto.fullName.toUpperCase(),
       });
-      await this.repository.save(user);
-      return { email: createUserDto.email, fullName: createUserDto.fullName };
+      const userSaved = await this.repository.save(user);
+      delete userSaved.password;
+      delete userSaved.isActive;
+      return userSaved;
+    } catch (error) {
+      this.errorHandler.handleException(error, "AuthService - registerUser");
+    }
+  };
+
+  public loginUser = async ({ email, password }: LoginUserDto) => {
+    try {
+      const userFound = await this.repository.findOneBy({ email });
+      return userFound;
     } catch (error) {
       this.errorHandler.handleException(error, "AuthService - registerUser");
     }
