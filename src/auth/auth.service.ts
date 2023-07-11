@@ -6,13 +6,16 @@ import { InjectRepository } from "@nestjs/typeorm";
 import ErrorHandler from "../common/utils/error-handler";
 import EncryptUtil from "../common/utils/encrypt-handler";
 import LoginUserDto from "./dto/login-user.dto";
+import JwtPayload from "./interfaces/jwt-payload.interface";
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private readonly repository: Repository<User>,
     private readonly errorHandler: ErrorHandler,
-    private readonly encryptUtil: EncryptUtil
+    private readonly encryptUtil: EncryptUtil,
+    private readonly jwtService: JwtService
   ) {}
   public registerUser = async (createUserDto: CreateUserDto) => {
     try {
@@ -23,24 +26,27 @@ export class AuthService {
         ),
         fullName: createUserDto.fullName.toUpperCase(),
       });
-      const userSaved = await this.repository.save(user);
-      delete userSaved.password;
-      delete userSaved.isActive;
-      return userSaved;
+      await this.repository.save(user);
+      delete user.password;
+      return { ...user, token: this.generateJWT({ email: user.email }) };
     } catch (error) {
       this.errorHandler.handleException(error, "AuthService - registerUser");
     }
   };
 
   public loginUser = async ({ email, password }: LoginUserDto) => {
-    const userFound = await this.repository.findOne({
+    const user = await this.repository.findOne({
       where: { email },
-      select: { email: true, password: true },
+      select: { email: true },
     });
-    if (!userFound)
+    if (!user)
       throw new UnauthorizedException("Credentials are not valid (email)");
-    if (!await this.encryptUtil.validatePassword(password, userFound.password))
+    if (!(await this.encryptUtil.validatePassword(password, user.password)))
       throw new UnauthorizedException("Credentials are not valid (password)");
-    return userFound;
+    return { ...user, token: this.generateJWT({ email: user.email }) };
+  };
+
+  private generateJWT = (payload: JwtPayload) => {
+    return this.jwtService.sign(payload);
   };
 }
