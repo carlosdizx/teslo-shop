@@ -1,7 +1,5 @@
 import {
-  BadRequestException,
   Injectable,
-  InternalServerErrorException,
   Logger,
   NotFoundException,
 } from "@nestjs/common";
@@ -17,7 +15,6 @@ import ErrorHandler from "../common/utils/error-handler";
 
 @Injectable()
 export class ProductsService {
-  private readonly logger = new Logger("ProductsService");
   constructor(
     @InjectRepository(Product) private readonly repository: Repository<Product>,
     @InjectRepository(ProductImage)
@@ -37,7 +34,7 @@ export class ProductsService {
       await this.repository.save(product);
       return { ...product, images: product.images.map((image) => image.url) };
     } catch (error) {
-      this.errorHandler.handleException(error);
+      this.errorHandler.handleException(error, "ProductsService - create");
     }
   };
 
@@ -103,7 +100,7 @@ export class ProductsService {
     } catch (error) {
       await queryRunner.rollbackTransaction();
       await queryRunner.release();
-      this.errorHandler.handleException(error);
+      this.errorHandler.handleException(error, "ProductsService - update");
     }
   };
 

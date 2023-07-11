@@ -20,7 +20,7 @@ export class AuthService {
       const userSaved = await this.repository.save(user);
       return { ...userSaved, isActive: undefined, roles: undefined };
     } catch (error) {
-      this.errorHandler.handleException(error);
+      this.errorHandler.handleException(error, "AuthService - registerUser");
     }
   };
 }
