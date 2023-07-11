@@ -1,7 +1,14 @@
 import { Reflector } from "@nestjs/core";
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  InternalServerErrorException,
+} from "@nestjs/common";
 import { Observable } from "rxjs";
 import { Roles } from "../enums/roles.enum";
+import User from "../entities/user.entity";
 
 @Injectable()
 export class UserRoleGuard implements CanActivate {
@@ -14,8 +21,13 @@ export class UserRoleGuard implements CanActivate {
       context.getHandler()
     );
 
-    console.log(validRoles);
+    const user: User = context.switchToHttp().getRequest().user;
+    if (!user) throw new BadRequestException("User not found (request)");
 
-    return true;
+    for (const rol of user.roles) {
+      if (validRoles.includes(rol)) return true;
+    }
+
+    return false;
   }
 }
