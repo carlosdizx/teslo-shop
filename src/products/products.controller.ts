@@ -1,24 +1,27 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
   ParseUUIDPipe,
+  Patch,
+  Post,
   Query,
 } from "@nestjs/common";
 import { ProductsService } from "./products.service";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import PaginationDto from "../common/dto/pagination.dto";
+import Auth from "../auth/decorators/auth.decorator";
+import { Roles } from "../auth/enums/roles.enum";
 
 @Controller("products")
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
+  @Auth(Roles.ADMIN)
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
   }
@@ -34,6 +37,7 @@ export class ProductsController {
   }
 
   @Patch(":id")
+  @Auth(Roles.ADMIN)
   update(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() updateProductDto: UpdateProductDto
@@ -42,6 +46,7 @@ export class ProductsController {
   }
 
   @Delete(":id")
+  @Auth(Roles.ADMIN)
   remove(@Param("id", ParseUUIDPipe) id: string) {
     return this.productsService.remove(id);
   }
