@@ -7,7 +7,6 @@ import ErrorHandler from "../common/utils/error-handler";
 import EncryptUtil from "../common/utils/encrypt-handler";
 import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
-import * as process from "process";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 
 @Module({
