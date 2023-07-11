@@ -31,7 +31,7 @@ export class AuthController {
 
   @Get("test")
   @SetMetadata("roles", [Roles.ADMIN, Roles.SUPERUSER])
-  @UseGuards(AuthGuard(), UserRoleGuard)
+  @UseGuards(AuthGuard())
   test(@getUser() user: User) {
     return {
       message: "It's Ok",

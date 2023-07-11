@@ -3,11 +3,10 @@ import {
   BadRequestException,
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
-  InternalServerErrorException,
 } from "@nestjs/common";
 import { Observable } from "rxjs";
-import { Roles } from "../enums/roles.enum";
 import User from "../entities/user.entity";
 
 @Injectable()
@@ -21,6 +20,8 @@ export class UserRoleGuard implements CanActivate {
       context.getHandler()
     );
 
+    if (!validRoles) throw new BadRequestException("Roles are required");
+
     const user: User = context.switchToHttp().getRequest().user;
     if (!user) throw new BadRequestException("User not found (request)");
 
@@ -28,6 +29,8 @@ export class UserRoleGuard implements CanActivate {
       if (validRoles.includes(rol)) return true;
     }
 
-    return false;
+    throw new ForbiddenException(
+      "You have not authorized, you have not permission"
+    );
   }
 }
