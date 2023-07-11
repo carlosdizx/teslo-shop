@@ -4,9 +4,11 @@ import UserRoleGuard from "../guards/user-role.guard";
 import RoleProtected from "./role-protected.decorator";
 import { Roles } from "../enums/roles.enum";
 
-export function Auth(...roles: Roles[]) {
+const Auth = (...roles: Roles[]) => {
   return applyDecorators(
     RoleProtected(...roles),
     UseGuards(AuthGuard(), UserRoleGuard)
   );
-}
+};
+
+export default Auth;
