@@ -3,9 +3,11 @@ import {
   BeforeUpdate,
   Column,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { Roles } from "../enums/roles.enum";
+import { Product } from "../../products";
 
 @Entity("users")
 export default class User {
@@ -30,6 +32,9 @@ export default class User {
     default: [Roles.USER],
   })
   roles: Roles[];
+
+  @OneToMany(() => Product, (product) => product.user)
+  products: Product[];
 
   @BeforeInsert()
   public insertEmailToLower = () => {
