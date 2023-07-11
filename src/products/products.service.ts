@@ -13,6 +13,7 @@ import Product from "./entities/product.entity";
 import { isUUID } from "class-validator";
 import PaginationDto from "../common/dto/pagination.dto";
 import ProductImage from "./entities/product-image.entity";
+import ErrorHandler from "../common/utils/error-handler";
 
 @Injectable()
 export class ProductsService {
@@ -21,7 +22,8 @@ export class ProductsService {
     @InjectRepository(Product) private readonly repository: Repository<Product>,
     @InjectRepository(ProductImage)
     private readonly repositoryProductImage: Repository<ProductImage>,
-    private readonly datasource: DataSource
+    private datasource: DataSource,
+    private errorHandler: ErrorHandler,
   ) {}
   public create = async (createProductDto: CreateProductDto) => {
     const { images = [], ...productDetails } = createProductDto;
@@ -35,7 +37,7 @@ export class ProductsService {
       await this.repository.save(product);
       return { ...product, images: product.images.map((image) => image.url) };
     } catch (error) {
-      this.handleException(error);
+      this.errorHandler.handleException(error);
     }
   };
 
@@ -101,7 +103,7 @@ export class ProductsService {
     } catch (error) {
       await queryRunner.rollbackTransaction();
       await queryRunner.release();
-      this.handleException(error);
+      this.errorHandler.handleException(error);
     }
   };
 
@@ -109,15 +111,5 @@ export class ProductsService {
     const result = await this.repository.delete(id);
     if (result.affected === 0) throw new NotFoundException("Product not found");
     return { message: `Product was removed` };
-  };
-
-  private handleException = (error: any) => {
-    if (error.code === "23505") {
-      throw new BadRequestException(error.detail);
-    }
-    this.logger.error(error);
-    throw new InternalServerErrorException(
-      "Unexpected error, check server logs"
-    );
   };
 }

@@ -3,17 +3,24 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { Repository } from "typeorm";
 import User from "./entities/user.entity";
 import { InjectRepository } from "@nestjs/typeorm";
+import ErrorHandler from "../common/utils/error-handler";
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User) private readonly repository: Repository<User>
+    @InjectRepository(User) private readonly repository: Repository<User>,
+    private readonly errorHandler: ErrorHandler
   ) {}
   public registerUser = async (createUserDto: CreateUserDto) => {
-    const user = this.repository.create({
-      ...createUserDto,
-      fullName: createUserDto.fullName.toUpperCase(),
-    });
-    return this.repository.save(user);
+    try {
+      const user = this.repository.create({
+        ...createUserDto,
+        fullName: createUserDto.fullName.toUpperCase(),
+      });
+      const userSaved = await this.repository.save(user);
+      return { ...userSaved, isActive: undefined, roles: undefined };
+    } catch (error) {
+      this.errorHandler.handleException(error);
+    }
   };
 }
