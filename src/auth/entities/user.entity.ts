@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { Roles } from "../enums/roles.enum";
-import { Product } from "../../products";
+import Product from "../../products/entities/product.entity";
 
 @Entity("users")
 export default class User {
