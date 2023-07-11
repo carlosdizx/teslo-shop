@@ -1,4 +1,11 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { Roles } from "../enums/roles.enum";
 
 @Entity("users")
 export default class User {
@@ -17,11 +24,12 @@ export default class User {
   @Column("bool", { default: true })
   isActive: boolean;
 
-  @Column("text", {
+  @Column("enum", {
+    enum: Roles,
     array: true,
-    default: ["user"],
+    default: [Roles.USER],
   })
-  roles: string[];
+  roles: Roles[];
 
   @BeforeInsert()
   public insertEmailToLower = () => {
