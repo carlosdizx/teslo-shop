@@ -5,7 +5,7 @@ export default class User {
   @PrimaryGeneratedColumn("uuid")
   private readonly id: string;
 
-  @Column("varchar")
+  @Column("varchar", { unique: true })
   email: string;
 
   @Column("varchar")
@@ -14,7 +14,7 @@ export default class User {
   @Column("varchar")
   fullName: string;
 
-  @Column("bool")
+  @Column("bool", { default: true })
   isActive: boolean;
 
   @Column("text", {
