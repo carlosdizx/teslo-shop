@@ -30,4 +30,10 @@ export class AuthController {
       user,
     };
   }
+
+  @Get("check-auth-toke")
+  @Auth()
+  checkAuthToke(@getUser() user: User) {
+    return this.authService.checkAuthToke(user);
+  }
 }

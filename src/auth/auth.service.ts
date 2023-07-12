@@ -50,4 +50,8 @@ export class AuthService {
   private generateJWT = (payload: JwtPayload) => {
     return this.jwtService.sign(payload);
   };
+
+  public checkAuthToke = async (user: User) => {
+    return { ...user, token: this.generateJWT({ id: user.id }) };
+  };
 }
